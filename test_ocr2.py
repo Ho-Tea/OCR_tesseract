@@ -43,10 +43,12 @@ def plt_imshow(title='image', img=None, figsize=(8, 5)):
         plt.xticks([]), plt.yticks([])
         plt.show()
 
-def run_tesseract_ocr(image, width, ksize=(5,5), min_threshold=75, max_threshold=200, lang='eng'):
+
+def make_scan_image(image, width, ksize=(5,5), min_threshold=75, max_threshold=200):
   image_list_title = []
   image_list = []
  
+  org_image = image.copy()
   image = imutils.resize(image, width=width)
   ratio = org_image.shape[1] / float(image.shape[1])
  
@@ -60,51 +62,49 @@ def run_tesseract_ocr(image, width, ksize=(5,5), min_threshold=75, max_threshold
   image_list = [gray, blurred, edged]
  
   # contours를 찾아 크기순으로 정렬
-  # contours란 같은 값을 가진 곳을 연결한 선이라고 생각
-  # 이미지 외곽선을 검출하기 위해 사용
   cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
   cnts = imutils.grab_contours(cnts)
   cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
  
-  receiptCnt = None
+  findCnt = None
  
   # 정렬된 contours를 반복문으로 수행하며 4개의 꼭지점을 갖는 도형을 검출
   for c in cnts:
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02 * peri, True)
  
-    # contours가 크기순으로 정렬되어 있기때문에 제일 첫번째 사각형을 영수증 영역으로 판단하고 break
+    # contours가 크기순으로 정렬되어 있기때문에 제일 첫번째 사각형을 영역으로 판단하고 break
     if len(approx) == 4:
-      receiptCnt = approx
+      findCnt = approx
       break
  
- 
   # 만약 추출한 윤곽이 없을 경우 오류
-  if receiptCnt is None:
-    raise Exception(("Could not find receipt outline."))
- 
+  if findCnt is None:
+    raise Exception(("Could not find outline."))
  
   output = image.copy()
-  cv2.drawContours(output, [receiptCnt], -1, (0, 255, 0), 2)
+  cv2.drawContours(output, [findCnt], -1, (0, 255, 0), 2)
   
-  image_list_title.append("Receipt Outline")
+  image_list_title.append("Outline")
   image_list.append(output)
  
   # 원본 이미지에 찾은 윤곽을 기준으로 이미지를 보정
-  receipt = four_point_transform(org_image, receiptCnt.reshape(4, 2) * ratio)
+  transform_image = four_point_transform(org_image, findCnt.reshape(4, 2) * ratio)
  
   plt_imshow(image_list_title, image_list)
-  plt_imshow("Receipt Transform", receipt)
+  plt_imshow("Receipt Transform", transform_image)
  
   options = "--psm 4"
  
-  text = pytesseract.image_to_string(cv2.cvtColor(receipt, cv2.COLOR_BGR2RGB), lang=lang, config=options)
+  text = pytesseract.image_to_string(cv2.cvtColor(transform_image, cv2.COLOR_BGR2RGB),config=options)
  
   # OCR결과 출력
   print("[INFO] OCR결과:")
   print("==================")
   print(text)
-
+  print("\n")
+  
+  return transform_image
 
 
 
@@ -113,4 +113,5 @@ url = 'https://user-images.githubusercontent.com/69428232/148330274-237d9b23-4a7
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 
  
-run_tesseract_ocr(org_image, width=200, ksize=(5, 5), min_threshold=20, max_threshold=100, lang='kor+eng')
+plt_imshow("orignal image", org_image)
+receipt_image = make_scan_image(org_image, width=200, ksize=(5, 5), min_threshold=20, max_threshold=100)
