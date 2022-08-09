@@ -4,9 +4,11 @@
 ## Reason:
 - Naver(clova), google(drive) 의 OCR API를 이용하여 공부 할까 했지만
 <br> **요금부가 및 지속적인 서비스에 애매**
+
 - clova 대략적인 절차
-<img src="1.jpeg">
-- 따라서, **pytesseract**이용
+<img src="imagefile/1.jpeg">
+
+- 따라서, **pytesseract** 이용
 
 ## What is Tesseract?
 - 다양한 운영체제를 위한 광학 문자 인식(OCR) 엔진
@@ -31,14 +33,45 @@
   - (test_ocr.py, test_ocr2.py) 동일한 내용
 - **이미지 연산을 통해 Scan이미지로의 변경보다는 다른 방법 강구**
 
-<img src="2.png">
+<img src="imagefile/2.png">
 
-<img src="3.png">
+<img src="imagefile/3.png">
+<br/>
 
+### Test2(test_ocr3.py)
+- Test1과 유사하지만 실제 영수증에 **Test**
+- `make_scan_image`메서드 수정
+  - Test1에서 사용한 `plt_imshow`메서드는 계속 사용
+  - `make_scan_image`메서드 인자 초깃값으로 `min_threshold=400, max_threshold=400`을 했지만 edged 사용X로 무쓸모
+  - edged를 삭제하고 binary를 추가
+- contours = 외곽선들의 집합(`cnts`)
+
+- Test 결과
+  - 영수증 1
+    <img src="imagefile/4.png">
+
+    <img src="imagefile/5.png">
+  - 영수증 2
+    <img src="imagefile/6.png">
+
+    <img src="imagefile/7.png">
+  - 영수증 3
+    <img src="imagefile/8.png">
+
+    <img src="imagefile/9.png">
+
+
+- 삽질 및 고생
+  - 외곽선이 이어지는 경우와 안이어지는 경우를 나누어 생각했다<br>(+ edged를 놓지 못해서 날린 시간)
+    - 각 이미지 변환처리의 임계값 조정 및 조합으로 해결
+  - 처음보는 함수와 여러 인자들 때문에 구글링하느라 시간의 80%를 ~허비~ 투자
+  - 정작 예제 사진은 인식이 안되고 다른 종류의 영수증이 인식이 된다
+  - kor trained data 인식오류?
 
 <br/>
 
-### Test2()
+
+### Test3()
 - 원하는 영역만 추출이 목적
 - 이미지 처리기술과 OpenCV 라이브러리를 사용하여 입력 이미지에서 원하는 텍스트 추출
   - 이미지 연산을 통한 영역 추출
