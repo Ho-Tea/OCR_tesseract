@@ -57,7 +57,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=75, max_threshold=2
   gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
   blurred = cv2.GaussianBlur(gray, ksize, 0)
   edged = cv2.Canny(blurred, min_threshold, max_threshold)
- 
+  
   image_list_title = ['gray', 'blurred', 'edged']
   image_list = [gray, blurred, edged]
  
