@@ -16,6 +16,24 @@
   - 3대 OCR엔진에 속한다
 - 많은 언어 및 스크립트에 대한 LSTM(딥러닝)기반 OCR 엔진 및 모델이 추가되어 총 116개의 언어가 제공된다
 
+## Principle
+- Tesseract는 input이미지의 특징점을 추출하고 그 특징점을 사용하여 문자를 인식
+  - 특징점을 추출하는 방법은 원래의 image에서 outline을 생성한 후
+  - 방향성을 정하고
+  - 방향성에 따라 다각형에 근접하게 추출하게된다.
+  - <img src="imagefile/11.png">
+
+
+- Tesseract OCR은 기본적으로 하위의 1. preprocessor와 2. segmentation 과정을 거쳐 나온 이미지를<br> 신경망 기법과 template matching기법을 사용하여 input 이미지를 인식하고 출력하게 된다.
+
+<img src="imagefile/10.png">
+
+  - 문자의 특징점이 추출되면 Tesseract 데이터 베이스 검색을 통하여 특징점이 비슷한 문자들과의 <br>Template Matching을 통해 특징점과 원본 이미지와의 오차율이 가장 낮은 문자를 선택하게 된다
+  - 이때, input 이미지의 문자와의 오차율을 Tesseract Template에 저장하여 **Training** 시킴으로써 보다 나은 효율을 증가
+  - <img src="imagefile/12.png">
+    - **Training**
+      - Tesseract는 인식률 향상을 위해서 Training 데이터를 적용할 수 있다
+      - 미리 학습시켜놓은 데이터들은 Tesseract 데이터 베이스에 저장되어<br> 나중에 글자와 트레이닝 데이터와 유사율을 비교하여 인식 결과를 반환
 
 ## How to use?
 - Tesseract Engine 설치
