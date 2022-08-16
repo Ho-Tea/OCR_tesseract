@@ -114,11 +114,11 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
 
   # getStructuringElement -> 형태학적 변환 인자로 커널사이즈 조정
   #이미지 필터링과정
-  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (30,10))
-  sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (30, 10))
-  gray = cv2.GaussianBlur(gray, (15, 15), 0)
+  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15,10))
+  sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 10))
+  gray = cv2.GaussianBlur(gray, ksize, 0)
   blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, rectKernel)
-  grad = cv2.Sobel(blackhat, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=-1)
+  grad = cv2.Sobel(blackhat, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=-1)
   grad = np.absolute(grad)
   (minVal, maxVal) = (np.min(grad), np.max(grad))
   grad = (grad - minVal) / (maxVal - minVal)
@@ -128,12 +128,12 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   thresh = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
  #close + Dilation(팽창) + Erosion(침식)
   close_thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, sqKernel)
-  close_thresh = cv2.erode(close_thresh, None, iterations=3)
-  close_thresh = cv2.dilate(close_thresh,None, iterations=3)
+  close_thresh = cv2.dilate(close_thresh,None, iterations=6)
+  close_thresh = cv2.erode(close_thresh, None, iterations=2)
   
   
   #이미지의 형태를 변경시켜 노이즈 제거 및 contour 적용 경계찾기
-  #plt_imshow(["Original", "Blackhat", "Gradient", "Rect Close", "Square Close"], [receipt, blackhat, grad, thresh, close_thresh], figsize=(16, 10))
+  plt_imshow(["Original", "Blackhat", "Gradient", "Rect Close", "Square Close"], [receipt, blackhat, grad, thresh, close_thresh], figsize=(16, 10))
 
 
   #Detection
@@ -152,7 +152,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
     (x, y, w, h) = cv2.boundingRect(c)
     ar = w // float(h)
     #cnts중 특정영역에 해당하는 부분만 따로 표시
-    if (w/2) > x and (h/4) < y and (3*h/4) < y:
+    if (w*2) > x and (h/4) < y and (3*h/4) < y:
       color = (0, 255, 0)
       roi = receipt[y-margin:y + h + margin, x:x + w + margin]
       #크기가 0인경우 에러를 야기하므로 if문 처리로 회피
