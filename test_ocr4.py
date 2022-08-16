@@ -112,7 +112,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=400, max_threshold=
   (H, W) = gray.shape
   
  # getStructuringElement -> 형태학적 변환 인자로 커널사이즈 조정
-  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (10,10))
+  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (30,17))
   sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 21))
  
   gray = cv2.GaussianBlur(gray, (11, 11), 0)
@@ -123,20 +123,24 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=400, max_threshold=
   (minVal, maxVal) = (np.min(grad), np.max(grad))
   grad = (grad - minVal) / (maxVal - minVal)
   grad = (grad * 255).astype("uint8")
- 
+
  #close
-  grad = cv2.morphologyEx(grad, cv2.MORPH_CLOSE, rectKernel)
+  #grad = cv2.morphologyEx(grad, cv2.MORPH_OPEN, rectKernel)
   thresh = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
  
  #open + 침식
-  close_thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, sqKernel)
-  close_thresh = cv2.erode(close_thresh, None, iterations=2)
+  close_thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, sqKernel)
+  close_thresh = cv2.dilate(close_thresh,None, iterations=3)
+  close_thresh = cv2.erode(close_thresh, None, iterations=3)
+  
+  
  
+  
   plt_imshow(["Original", "Blackhat", "Gradient", "Rect Close", "Square Close"], [receipt, blackhat, grad, thresh, close_thresh], figsize=(16, 10))
 
 
   #Detection - 여기부분만 손대서 윤곽선의 특정부분만을 catch하면 될듯 그리고 merge
-  cnts = cv2.findContours(grad.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+  cnts = cv2.findContours(close_thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
   cnts = imutils.grab_contours(cnts)
   cnts = sort_contours(cnts, method="top-to-bottom")[0]
  

@@ -142,7 +142,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=75, max_threshold=2
     cv2.rectangle(receipt_grouping, (x - margin, y - margin), (x + w + margin, y + h + margin), color, 2)
     cv2.putText(receipt_grouping, "".join(str(ar)), (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 2)
   
-    #plt_imshow(["Grouping Image"], [receipt_grouping], figsize=(16, 10))
+    plt_imshow(["Grouping Image"], [receipt_grouping], figsize=(16, 10))
  
   for idx, roi in enumerate(roi_list):
     if idx == 0:
