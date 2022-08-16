@@ -90,53 +90,75 @@
     <img src="imagefile/9.png">
 
 
-- 삽질 및 고생
+- 💣삽질 및 고생
   - 외곽선이 이어지는 경우와 안이어지는 경우를 나누어 생각했다<br>(+ edged를 놓지 못해서 날린 시간)
     - 각 이미지 변환처리의 임계값 조정 및 조합으로 해결
   - 처음보는 함수와 여러 인자들 때문에 구글링하느라 시간의 80%를 ~허비~ 투자
   - 정작 예제 사진은 인식이 안되고 다른 종류의 영수증이 인식이 된다
   - kor trained data 인식오류?
+    - xxx
 
 <br/>
 
 
-### Test3()
+### Test3(test_ocr4.py)
 - 원하는 영역만 추출이 목적
 - 이미지 처리기술과 OpenCV 라이브러리를 사용하여 입력 이미지에서 원하는 텍스트 추출
   - 이미지 연산을 통한 영역 추출
+    - 쉽게 말해 필터링 작업
+      - `cv2.getStructuringElement`, `cv2.GaussianBlur`, `cv2.morphologyEx` 등등의 메소드 사용
+
     - 그레이 스케일로 변환
-    - 흐릿한 Grayscale 이미지에 blackhat 모노폴리 연산을 적용<br> blackhat연산은 밝은 배경에서 어두운 영역을 드러내기위해 사용 -> 영수증에 효율적
-    - 닫힘연산을 통해 끊어져보이는 객체를 연결하여 gruoping
+      - `gray = cv2.cvtColor(receipt, cv2.COLOR_BGR2GRAY)`
+
+    - 흐릿한 Grayscale 이미지에 blackhat 모노폴리 연산을 적용 `cv2.morphologyEx`<br> blackhat연산은 밝은 배경에서 어두운 영역을 드러내기위해 사용 -> 영수증에 효율적
+    - 닫힘연산을 통해 끊어져보이는 객체를 연결하여 grouping `cv2.morphologyEx(grad, cv2.MORPH_CLOSE, rectKernel)`
+    - Dilation, Erosion 사용으로 이미지 형태 변환
 
   ``` python
+  #원하는 영역 추출로 변환과정
+  #grayscale로 변환
   gray = cv2.cvtColor(receipt, cv2.COLOR_BGR2GRAY)
   (H, W) = gray.shape
- 
-  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (30, 20))
-  sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (50, 21))
- 
-  gray = cv2.GaussianBlur(gray, (11, 11), 0)
+
+  # getStructuringElement -> 형태학적 변환 인자로 커널사이즈 조정
+  #이미지 필터링과정
+  rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15,10))
+  sqKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 10))
+  gray = cv2.GaussianBlur(gray, ksize, 0)
   blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, rectKernel)
- 
   grad = cv2.Sobel(blackhat, ddepth=cv2.CV_32F, dx=1, dy=0, ksize=-1)
   grad = np.absolute(grad)
   (minVal, maxVal) = (np.min(grad), np.max(grad))
   grad = (grad - minVal) / (maxVal - minVal)
   grad = (grad * 255).astype("uint8")
- 
+  #close
   grad = cv2.morphologyEx(grad, cv2.MORPH_CLOSE, rectKernel)
   thresh = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
- 
+  #close + Dilation(팽창) + Erosion(침식)
   close_thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, sqKernel)
+  close_thresh = cv2.dilate(close_thresh,None, iterations=6)
   close_thresh = cv2.erode(close_thresh, None, iterations=2)
- 
-  plt_imshow(["Original", "Blackhat", "Gradient", "Rect Close", "Square Close"], [receipt, blackhat, grad, thresh, close_thresh], figsize=(16, 10))
- 
   ```
 
-  - Detecion
-    - grouping된 영역의 윤곽선을 찾고 그 윤곽선이 특정 조건(ex: 종횡비)에 만족하는 영역만 추출
+- Detecion
+  - grouping된 영역의 윤곽선을 찾고 그 윤곽선이 특정 조건(ex: 종횡비)에 만족하는 영역만 추출
     
+<img src="imagefile/13.png">
+
+<img src="imagefile/14.png">
+
+<img src="imagefile/15.png">
+
+
+- 💣삽질 및 고생 그리고 **결론...**
+  - 영수증에서 특정 부분에 해당하는 영역만 추출하기가 매우 어려움
+    - 물품이름이 포함된 `roi`이미지를 구할수는 있지만 모든 `roi`이미지에서 물품이름만 골라 빼내기엔 한계가 있음
+    - 우선 한글이 포함되어있는 문자만 출력 
+  - 이미지연산에서 인자값 조정으로 많은 시간을 날림
+  <br/>
+  ### 💡결론...
+  **이미지에서 텍스트를 출력하기 위해선 이미지의 노이즈를 잡기위해 필터링작업(변환작업)을 많이 수행해야하고 적절히 수행해야할 것 같다 <br>그 후, 특정 윤곽을 찾고 특정 영역에 해당하는 부분만을 찾는다는 것은 더 획기적인 이미지 윤곽설정이랑 변환작업이 필요로 할 것 같다**
 
     
 [reference](https://yunwoong.tistory.com/72?category=902345) 
