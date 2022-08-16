@@ -10,46 +10,7 @@ import numpy as np
 import sys
 
 
-#이미지를 확인하기 위한 function
-def plt_imshow(title='image', img=None, figsize=(8, 5)):
-    plt.figure(figsize=figsize)
-
-    if type(img) == list:
-        if type(title) == list:
-            titles = title
-        else:
-            titles = []
-
-            for i in range(len(img)):
-                titles.append(title)
-
-        for i in range(len(img)):
-            if len(img[i].shape) <= 2:
-                rgbImg = cv2.cvtColor(img[i], cv2.COLOR_GRAY2RGB)
-            else:
-                rgbImg = cv2.cvtColor(img[i], cv2.COLOR_BGR2RGB)
-
-            plt.subplot(1, len(img), i + 1), plt.imshow(rgbImg)
-            plt.title(titles[i])
-            plt.xticks([]), plt.yticks([])
-
-        plt.show()
-    else:
-        if len(img.shape) < 3:
-            rgbImg = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        else:
-            rgbImg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        plt.imshow(rgbImg)
-        plt.title(title)
-        plt.xticks([]), plt.yticks([])
-        plt.show()
-
-
 def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=200):
-  image_list_title = []
-  image_list = []
-
   #image.copy()로 이미지 인자 받아오기
   org_image = image.copy()
   image = imutils.resize(image, width=width)
@@ -63,10 +24,6 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   ret, binary = cv2.threshold(blurred,155,255,cv2.THRESH_BINARY)
   binary = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,15,2)
   
-  # 순서
-  #image_list_title = [ 'gray','blurred','binary']
-  #image_list = [gray, blurred, binary]
-
   # contours를 찾아 크기순으로 정렬
   cnts = cv2.findContours(binary.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
   cnts = imutils.grab_contours(cnts)
@@ -97,16 +54,10 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   #윤곽선 그리기
   output = image.copy()
   cv2.drawContours(output, [findCnt], -1, (0, 255, 0), 2)
-  image_list_title.append("Outline")
-  image_list.append(output)
-  #plt_imshow(image_list_title, image_list)
   
   # 원본 이미지에 찾은 윤곽을 기준으로 이미지를 보정
   receipt = four_point_transform(org_image, findCnt.reshape(4, 2) * ratio)
- 
-  #plt_imshow(image_list_title, image_list)
-  #plt_imshow("Receipt Transform", receipt)
-  
+
   #원하는 영역 추출로 변환과정
   #grayscale로 변환
   gray = cv2.cvtColor(receipt, cv2.COLOR_BGR2GRAY)
@@ -130,11 +81,6 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   close_thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, sqKernel)
   close_thresh = cv2.dilate(close_thresh,None, iterations=6)
   close_thresh = cv2.erode(close_thresh, None, iterations=2)
-  
-  
-  #이미지의 형태를 변경시켜 노이즈 제거 및 contour 적용 경계찾기
-  plt_imshow(["Original", "Blackhat", "Gradient", "Rect Close", "Square Close"], [receipt, blackhat, grad, thresh, close_thresh], figsize=(16, 10))
-
 
   #Detection
   #contour 찾기
@@ -143,35 +89,22 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   cnts = sort_contours(cnts, method="top-to-bottom")[0]
  
   roi_list = []
-  roi_title_list = []
- 
   margin = 50
-  receipt_grouping = receipt.copy()
  
   for c in cnts:
     (x, y, w, h) = cv2.boundingRect(c)
-    ar = w // float(h)
     #cnts중 특정영역에 해당하는 부분만 따로 표시
-    if (w*2) > x and (h/4) < y and (3*h/4) < y:
+    if (w*2) > x and (2*h/5) < y:
       color = (0, 255, 0)
       roi = receipt[y-margin:y + h + margin, x:x + w + margin]
       #크기가 0인경우 에러를 야기하므로 if문 처리로 회피
       if roi.size == 0:
         continue
       roi_list.append(roi)
-      roi_title_list.append("Roi_{}".format(len(roi_list)))
     else:
       color = (0, 0, 255)
-    #보여지는 이미지 상 그리기
-    cv2.rectangle(receipt_grouping, (x - margin, y - margin), (x + w + margin, y + h + margin), color, 2)
-    cv2.putText(receipt_grouping, "".join(str(ar)), (x, y - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.65, color, 2)
-  
-    plt_imshow(["Grouping Image"], [receipt_grouping], figsize=(16, 10))
-
-  
+    
   print("[INFO] OCR결과:")
-  
-  plt_imshow(roi_title_list, roi_list, figsize=(16, 10))
   
   #텍스트 출력
   for roi in roi_list: 
@@ -180,7 +113,18 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
     threshold_roi = cv2.threshold(gray_roi, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     roi_text = pytesseract.image_to_string(roi, lang='kor+eng')
     if isHangul(roi_text):
-      print(roi_text)
+      showProduct(roi_text)
+
+"""      
+def isProduct(text):
+  if text.find("00") == 0:
+    return 1
+  elif "상품" in text:
+    return 1
+"""
+
+def showProduct(text):
+  print(text)
 
 #한글을 check하는 부분
 def isHangul(text):
@@ -193,7 +137,5 @@ url = 'http://youbojob.why-be.co.kr/data/file/paper/thumb-2944312436_0YM4PlBE_0f
  
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 
- 
-plt_imshow("orignal image", org_image)
 make_scan_image(org_image, width=200, ksize=(5, 5))
 
