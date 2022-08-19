@@ -64,8 +64,8 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   binary = cv2.adaptiveThreshold(blurred,255,cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY,15,2)
   
   # 순서
-  #image_list_title = [ 'gray','blurred','binary']
-  #image_list = [gray, blurred, binary]
+  image_list_title = [ 'gray','blurred','binary']
+  image_list = [gray, blurred, binary]
 
   # contours를 찾아 크기순으로 정렬
   cnts = cv2.findContours(binary.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -104,8 +104,8 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   # 원본 이미지에 찾은 윤곽을 기준으로 이미지를 보정
   receipt = four_point_transform(org_image, findCnt.reshape(4, 2) * ratio)
  
-  #plt_imshow(image_list_title, image_list)
-  #plt_imshow("Receipt Transform", receipt)
+  plt_imshow(image_list_title, image_list)
+  plt_imshow("Receipt Transform", receipt)
   
   #원하는 영역 추출로 변환과정
   #grayscale로 변환
@@ -189,7 +189,7 @@ def isHangul(text):
     return hanCount > 0
 
 
-url = 'https://blog.kakaocdn.net/dn/q8bkq/btqJCt61orM/J4OuH0kgcyyVkPL8e76WD0/img.jpg'
+url = 'https://t1.daumcdn.net/cfile/tistory/141574194B6F6C32C9'
  
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 

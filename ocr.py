@@ -133,7 +133,7 @@ def isHangul(text):
     return hanCount > 0
 
 
-url = 'http://youbojob.why-be.co.kr/data/file/paper/thumb-2944312436_0YM4PlBE_0f464cf018a159aa3ad9b03a31f3c6d766d04905_600x800.jpg'
+url = 'https://cdn.ppomppu.co.kr/zboard/data3/2021/0429/20210429173007_cnrupxvg.jpg'
  
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 
