@@ -169,6 +169,17 @@
 
 **이미지에서 텍스트를 출력하기 위해선 이미지의 노이즈를 잡기위해 필터링작업(변환작업)을 많이 수행해야하고 적절히 수행해야할 것 같다 <br>그 후, 특정 윤곽을 찾고 특정 영역에 해당하는 부분만을 찾는다는 것은 더 획기적인 이미지 윤곽설정이랑 변환작업이 필요로 할 것 같다**
 
++ 신분증 인식과 유사하게 상단에 **상품명, 단가** 등을 맞춰서 이미지 인식시 정확도 증가
+<img src="imagefile/16.jpeg">
+
+<br/>
+
+  ## Output
+
+  <img src="imagefile/17.png">
+
+  <img src="imagefile/18.png">
+
     
 [reference](https://yunwoong.tistory.com/72?category=902345) 
 
