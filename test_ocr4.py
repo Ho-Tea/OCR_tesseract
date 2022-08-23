@@ -152,7 +152,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
     (x, y, w, h) = cv2.boundingRect(c)
     ar = w // float(h)
     #cnts중 특정영역에 해당하는 부분만 따로 표시
-    if (w*2) > x and (h/4) < y and (3*h/4) < y:
+    if (w*2) > x and h > y:
       color = (0, 255, 0)
       roi = receipt[y-margin:y + h + margin, x:x + w + margin]
       #크기가 0인경우 에러를 야기하므로 if문 처리로 회피
@@ -189,7 +189,7 @@ def isHangul(text):
     return hanCount > 0
 
 
-url = 'https://t1.daumcdn.net/cfile/tistory/141574194B6F6C32C9'
+url = 'https://t1.daumcdn.net/cfile/tistory/232DA43A550302D022'
  
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 
