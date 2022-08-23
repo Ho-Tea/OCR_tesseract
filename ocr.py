@@ -10,6 +10,7 @@ import numpy as np
 import sys
 
 
+
 def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=200):
   #image.copy()로 이미지 인자 받아오기
   org_image = image.copy()
@@ -94,7 +95,7 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
   for c in cnts:
     (x, y, w, h) = cv2.boundingRect(c)
     #cnts중 특정영역에 해당하는 부분만 따로 표시
-    if (w*2) > x and (2*h/5) < y:
+    if (w*2) > x and h > y:
       color = (0, 255, 0)
       roi = receipt[y-margin:y + h + margin, x:x + w + margin]
       #크기가 0인경우 에러를 야기하므로 if문 처리로 회피
@@ -106,6 +107,8 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
     
   print("[INFO] OCR결과:")
   
+  arr = []
+  
   #텍스트 출력
   for roi in roi_list: 
     #roi_list는 좌표값을 의미한다
@@ -113,7 +116,8 @@ def make_scan_image(image, width, ksize=(5,5), min_threshold=50, max_threshold=2
     threshold_roi = cv2.threshold(gray_roi, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
     roi_text = pytesseract.image_to_string(roi, lang='kor+eng')
     if isHangul(roi_text):
-      showProduct(roi_text)
+      splitResult(arr,roi_text)
+        
 
 """      
 def isProduct(text):
@@ -123,8 +127,18 @@ def isProduct(text):
     return 1
 """
 
-def showProduct(text):
-  print(text)
+def splitResult(arr, text):
+  count = 0;
+  for line in text.split('\n'):
+        if isHangul(line):
+          # 특수문자 제거
+          new_line = ''.join(char for char in line if char.isalnum())
+          # 숫자 제거
+          new_line = re.sub(r'[0-9]+', '', new_line)
+          # 문자열 split
+          arr.append(new_line)
+          print(count,'-------',new_line)
+          count = count+1
 
 #한글을 check하는 부분
 def isHangul(text):
@@ -133,7 +147,7 @@ def isHangul(text):
     return hanCount > 0
 
 
-url = 'https://cdn.ppomppu.co.kr/zboard/data3/2021/0429/20210429173007_cnrupxvg.jpg'
+url = 'https://t1.daumcdn.net/cfile/tistory/232DA43A550302D022'
  
 image_nparray = np.asarray(bytearray(requests.get(url).content), dtype=np.uint8)
 org_image = cv2.imdecode(image_nparray, cv2.IMREAD_COLOR) 
